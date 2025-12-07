@@ -36,7 +36,9 @@ if (first) {
   console.log('Cart items after remove:', cart.getItems());
 }
 
-const apiOrigin = (import.meta.env.VITE_API_ORIGIN as string) ?? 'https://larek-api.nomoreparties.co';
+const apiOrigin =
+  (import.meta.env.VITE_API_ORIGIN as string) ??
+  'https://larek-api.nomoreparties.co';
 const baseApi = new Api(apiOrigin);
 const shopApi = new ShopApi(baseApi);
 
