@@ -5,7 +5,8 @@ import { CartModel } from './components/Models/CartModel';
 import { BuyerModel } from './components/Models/BuyerModel';
 import { ShopApi } from './components/Models/ShopApi';
 
-import Api from './components/base/Api';
+import { Api } from './components/base/Api';
+
 import { apiProducts } from './utils/data';
 
 console.group('Models test');
