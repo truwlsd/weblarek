@@ -4,6 +4,7 @@ import { CatalogModel } from './components/Models/CatalogModel';
 import { CartModel } from './components/Models/CartModel';
 import { BuyerModel } from './components/Models/BuyerModel';
 import { ShopApi } from './components/Models/ShopApi';
+
 import Api from './components/base/Api';
 import { apiProducts } from './utils/data';
 
@@ -25,36 +26,20 @@ catalog.setPreview(first ?? null);
 console.log('Preview item:', catalog.getPreview());
 
 if (first) {
-  cart.addItem(first);
-  console.log('Cart items after add:', cart.getItems());
-  console.log('Cart total:', cart.getTotal());
-  console.log('Cart count:', cart.getCount());
-  console.log('Has first in cart:', cart.hasItem(first.id));
+    cart.addItem(first);
+    console.log('Cart items after add:', cart.getItems());
+    console.log('Cart total:', cart.getTotal());
+    console.log('Cart count:', cart.getCount());
+    console.log('Has first in cart:', cart.hasItem(first.id));
 
-  cart.removeItem(first.id);
-  console.log('Cart after remove:', cart.getItems());
+    cart.removeItem(first.id);
+    console.log('Cart items after remove:', cart.getItems());
 }
 
-cart.addItem(first!);
-cart.clear();
-console.log('Cart after clear:', cart.getItems());
+const api = new Api('https://example.com/api');
+const shopApi = new ShopApi(api);
 
-buyer.setField('address', 'ул. Тест, д.1');
-buyer.setField('payment', 'card');
-buyer.setField('email', 'test@example.com');
-buyer.setField('phone', '+123456789');
-console.log('Buyer data:', buyer.getData());
-console.log('Buyer validation (should be empty):', buyer.validate());
+console.log(buyer);
+console.log(shopApi);
 
 console.groupEnd();
-
-// API test using base Api and ShopApi
-const apiOrigin = (import.meta.env.VITE_API_ORIGIN as string) ?? 'https://larek-api.nomoreparties.co';
-const baseApi = new Api(apiOrigin);
-const shopApi = new ShopApi(baseApi);
-
-shopApi.getProducts().then(products => {
-  console.log('Products fetched from server (first 5):', products.slice(0, 5));
-}).catch(err => {
-  console.error('Error fetching products from server (this is expected when offline):', err);
-});

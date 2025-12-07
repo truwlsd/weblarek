@@ -16,28 +16,27 @@ export default class Api implements IApi {
 
     protected handleResponse<T>(response: Response): Promise<T> {
         if (!response.ok) {
-            return Promise.reject(`API error: ${response.status}`);
+            return Promise.reject(response.statusText);
         }
         return response.json();
     }
 
     get<T>(uri: string): Promise<T> {
-    return fetch(this.baseUrl + uri, {
-        ...this.options,
-        method: 'GET'
-    }).then((response) => this.handleResponse<T>(response));
-}
+        return fetch(this.baseUrl + uri, {
+            ...this.options,
+            method: 'GET'
+        }).then((res) => this.handleResponse<T>(res));
+    }
 
-
-    post<T>(uri: string, data: object, method?: ApiPostMethods): Promise<T> {
-    return fetch(this.baseUrl + uri, {
-        ...this.options,
-        method: method ?? 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            ...(this.options.headers ?? {})
-        },
-        body: JSON.stringify(data)
-    }).then((response) => this.handleResponse<T>(response));
-}
+    post<T>(uri: string, data: object, method: ApiPostMethods = 'POST'): Promise<T> {
+        return fetch(this.baseUrl + uri, {
+            ...this.options,
+            method,
+            headers: {
+                'Content-Type': 'application/json',
+                ...(this.options.headers ?? {})
+            },
+            body: JSON.stringify(data)
+        }).then((res) => this.handleResponse<T>(res));
+    }
 }
