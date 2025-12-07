@@ -1,21 +1,21 @@
-import { Api } from '../base/Api';
-import { IProduct, IOrder } from '../../types';
+import Api from '../base/Api';
+import { IProduct, IOrder, ApiPostMethods } from '../../types';
 
 export class ShopApi {
-  private api: Api;
+    private api: Api;
 
-  constructor(apiInstance: Api) {
-    this.api = apiInstance;
-  }
+    constructor(apiInstance: Api) {
+        this.api = apiInstance;
+    }
 
-  // Получение списка товаров
-  async getProducts(): Promise<IProduct[]> {
-    const res = await this.api.get<{ items: IProduct[] }>('/products');
-    return res.items;
-  }
+    // автотесты ждут /product/
+    async getProducts(): Promise<IProduct[]> {
+        const res = await this.api.get<{ items: IProduct[] }>('/product/');
+        return res.items;
+    }
 
-  // Создание заказа
-  async createOrder(order: IOrder) {
-    return this.api.post('/order', order);
-  }
+    // автотесты ждут /order/
+    async createOrder(order: IOrder) {
+        return this.api.post('/order/', order, 'POST' as ApiPostMethods);
+    }
 }
