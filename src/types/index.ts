@@ -1,30 +1,29 @@
 export type ApiPostMethods = 'POST' | 'PUT' | 'DELETE';
 
 export interface IApi {
-    get<T>(uri: string): Promise<T>;
-    post<T>(uri: string, data: object, method?: ApiPostMethods): Promise<T>;
+  get<T>(uri: string): Promise<T>;
+  post<T>(uri: string, data: object, method?: ApiPostMethods): Promise<T>;
 }
+
+export type TPayment = 'card' | 'cash';
 
 export interface IProduct {
-    id: string;
-    title: string;
-    price: number | null;   
-    description: string;
-    image: string;
-}
-
-export interface IOrder {
-    payment: string;
-    email: string;
-    phone: string;
-    address: string;
-    items: string[];
-    total: number;
+  id: string;
+  description: string;
+  image: string;
+  title: string;
+  category: string;
+  price: number | null;
 }
 
 export interface IBuyer {
-    payment: string | null;
-    email: string;
-    phone: string;
-    address: string;
+  payment: TPayment | null;
+  email: string;
+  phone: string;
+  address: string;
+}
+
+export interface IOrder {
+  buyer: IBuyer;
+  products: { id: string }[];
 }

@@ -26,19 +26,21 @@ catalog.setPreview(first ?? null);
 console.log('Preview item:', catalog.getPreview());
 
 if (first) {
-    cart.addItem(first);
-    console.log('Cart items after add:', cart.getItems());
-    console.log('Cart total:', cart.getTotal());
-    console.log('Cart count:', cart.getCount());
-    console.log('Has first in cart:', cart.hasItem(first.id));
+  cart.addItem(first);
+  console.log('Cart items after add:', cart.getItems());
+  console.log('Cart total:', cart.getTotal());
+  console.log('Cart count:', cart.getCount());
+  console.log('Has first in cart:', cart.hasItem(first.id));
 
-    cart.removeItem(first.id);
-    console.log('Cart items after remove:', cart.getItems());
+  cart.removeItem(first.id);
+  console.log('Cart items after remove:', cart.getItems());
 }
 
-const api = new Api('https://example.com/api');
-const shopApi = new ShopApi(api);
+const apiOrigin = (import.meta.env.VITE_API_ORIGIN as string) ?? 'https://larek-api.nomoreparties.co';
+const baseApi = new Api(apiOrigin);
+const shopApi = new ShopApi(baseApi);
 
+// используем buyer и shopApi, чтобы убрать предупреждения о неиспользуемых переменных
 console.log(buyer);
 console.log(shopApi);
 

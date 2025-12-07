@@ -2,18 +2,20 @@ import Api from '../base/Api';
 import { IProduct, IOrder } from '../../types';
 
 export class ShopApi {
-    private api: Api;
+  private api: Api;
 
-    constructor(apiInstance: Api) {
-        this.api = apiInstance;
-    }
+  constructor(apiInstance: Api) {
+    this.api = apiInstance;
+  }
 
-    async getProducts(): Promise<IProduct[]> {
-        const res = await this.api.get<{ items: IProduct[] }>('/products');
-        return res.items;
-    }
+  // сервер ожидает /product/
+  async getProducts(): Promise<IProduct[]> {
+    const res = await this.api.get<{ items: IProduct[] }>('/product/');
+    return res.items;
+  }
 
-    async createOrder(order: IOrder) {
-        return this.api.post('/order', order);
-    }
+  // POST /order/
+  async createOrder(order: IOrder) {
+    return this.api.post('/order/', order);
+  }
 }
