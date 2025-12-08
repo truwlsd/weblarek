@@ -1,50 +1,54 @@
+// src/main.ts
+
 import './scss/styles.scss';
 
 import { CatalogModel } from './components/Models/CatalogModel';
 import { CartModel } from './components/Models/CartModel';
 import { BuyerModel } from './components/Models/BuyerModel';
 import { ShopApi } from './components/Models/ShopApi';
-
 import { Api } from './components/base/Api';
 
 import { apiProducts } from './utils/data';
+import { API_URL } from './utils/constants';
+import { IOrder } from './types';
 
-console.group('Models test');
+console.group('Проверка всех моделей и API');
 
 const catalog = new CatalogModel();
 const cart = new CartModel();
 const buyer = new BuyerModel();
 
-console.log('Initial catalog items:', catalog.getItems());
-
 catalog.setItems(apiProducts.items);
-console.log('Catalog after setItems:', catalog.getItems());
 
-const first = catalog.getItems()[0];
-console.log('First item:', first);
+const firstItem = catalog.getItems()[0];
+const secondItem = catalog.getItems()[1];
+if (firstItem) cart.addItem(firstItem);
+if (secondItem) cart.addItem(secondItem);
 
-catalog.setPreview(first ?? null);
-console.log('Preview item:', catalog.getPreview());
+buyer.setField('email', 'test@weblarek.ru');
+buyer.setField('phone', '+79991234567');
+buyer.setField('address', 'г. Москва, ул. Тестовая, д. 1');
+buyer.setField('payment', 'card');
 
-if (first) {
-  cart.addItem(first);
-  console.log('Cart items after add:', cart.getItems());
-  console.log('Cart total:', cart.getTotal());
-  console.log('Cart count:', cart.getCount());
-  console.log('Has first in cart:', cart.hasItem(first.id));
-
-  cart.removeItem(first.id);
-  console.log('Cart items after remove:', cart.getItems());
-}
-
-const apiOrigin =
-  (import.meta.env.VITE_API_ORIGIN as string) ??
-  'https://larek-api.nomoreparties.co';
-const baseApi = new Api(apiOrigin);
+const baseApi = new Api(API_URL);
 const shopApi = new ShopApi(baseApi);
 
-// используем buyer и shopApi, чтобы убрать предупреждения о неиспользуемых переменных
-console.log(buyer);
-console.log(shopApi);
+shopApi.getProducts()
+  .then(products => {
+    catalog.setItems(products);
+  })
+  .catch(err => console.error(err));
+
+const order: IOrder = {
+  ...buyer.getData(),
+  items: cart.getItems().map(item => item.id),
+  total: cart.getTotal(),
+};
+
+shopApi.createOrder(order)
+  .then(response => {
+    console.log('Заказ создан:', response.id, response.total);
+  })
+  .catch(err => console.error(err));
 
 console.groupEnd();
