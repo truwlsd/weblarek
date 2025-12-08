@@ -14,7 +14,6 @@ export class BuyerModel {
     this.data[key] = value;
   }
 
-  // ← ВОТ ЭТА СТРОЧКА ВСЁ ИСПРАВЛЯЕТ
   getData(): IBuyer {
     return { ...this.data };
   }
