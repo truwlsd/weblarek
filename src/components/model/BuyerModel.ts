@@ -1,4 +1,6 @@
+
 import { IBuyer } from '../../types';
+import { events } from '../common/events';
 
 type ValidationErrors = Partial<Record<keyof IBuyer, string>>;
 
@@ -12,6 +14,7 @@ export class BuyerModel {
 
   setField<K extends keyof IBuyer>(key: K, value: IBuyer[K]): void {
     this.data[key] = value;
+    events.emit('buyer:changed', this.getData());
   }
 
   getData(): IBuyer {
@@ -25,11 +28,9 @@ export class BuyerModel {
       phone: '',
       address: ''
     };
+    events.emit('buyer:changed', this.getData());
   }
 
-  /**
-   * Возвращает объект ошибок по полям. Если поле корректно — свойства для него нет.
-   */
   validate(): ValidationErrors {
     const errors: ValidationErrors = {};
 
