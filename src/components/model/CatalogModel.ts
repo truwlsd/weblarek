@@ -1,6 +1,5 @@
-
 import { IProduct } from '../../types';
-import { events } from '../common/events';
+import { events } from '../../main';
 
 export class CatalogModel {
   private items: IProduct[] = [];
@@ -8,7 +7,7 @@ export class CatalogModel {
 
   setItems(items: IProduct[]): void {
     this.items = [...items];
-    events.emit('catalog:changed', { items: this.items });
+    events.emit('catalog:changed');
   }
 
   getItems(): IProduct[] {
@@ -22,12 +21,12 @@ export class CatalogModel {
   setPreviewById(id: string): void {
     const product = this.getItem(id);
     this.preview = product ?? null;
-    events.emit('preview:changed', { product: this.preview });
+    events.emit('preview:changed');
   }
 
   setPreview(product: IProduct | null): void {
     this.preview = product;
-    events.emit('preview:changed', { product: this.preview });
+    events.emit('preview:changed');
   }
 
   getPreview(): IProduct | null {

@@ -1,6 +1,6 @@
 
 import { Component } from '../base/Component';
-import { events } from '../common/events';
+import { events } from "../../main";
 
 export class Page extends Component<HTMLElement> {
   protected _gallery: HTMLElement;

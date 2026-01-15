@@ -1,12 +1,7 @@
-
 import { Component } from '../base/Component';
-import { events } from '../common/events';
+import { events } from '../../main';
 
-interface IModalData {
-  content: HTMLElement;
-}
-
-export class Modal extends Component<IModalData> {
+export class Modal extends Component<HTMLElement> {
   protected _content: HTMLElement;
   protected _closeButton: HTMLButtonElement;
 
@@ -16,17 +11,13 @@ export class Modal extends Component<IModalData> {
     this._closeButton = container.querySelector('.modal__close')!;
     this._content = container.querySelector('.modal__content')!;
 
-    // Закрытие по крестику
     this._closeButton.addEventListener('click', this.close.bind(this));
 
-    // Закрытие по клику вне контента
     container.addEventListener('click', (event) => {
       if (event.target === container) {
         this.close();
       }
     });
-
-    // Запрет скролла при открытии
   }
 
   set content(value: HTMLElement) {
@@ -35,20 +26,12 @@ export class Modal extends Component<IModalData> {
 
   open() {
     this.container.classList.add('modal_active');
-    document.body.classList.add('page__wrapper_modal'); // если нужно блокировать скролл
     events.emit('modal:open');
   }
 
   close() {
     this.container.classList.remove('modal_active');
-    document.body.classList.remove('page__wrapper_modal');
-    this.content = document.createElement('div'); // очищаем
+    this._content.innerHTML = ''; // очищаем
     events.emit('modal:close');
-  }
-
-  render(data: IModalData): HTMLElement {
-    super.render(data);
-    this.open();
-    return this.container;
   }
 }

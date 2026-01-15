@@ -1,4 +1,3 @@
-
 import { Component } from '../base/Component';
 
 interface IFormState {
@@ -27,16 +26,14 @@ export abstract class Form<T> extends Component<IFormState> {
       e.preventDefault();
       this.handleSubmit();
     });
+
+    this.valid = false;
+    this.errors = [];
   }
 
-  // @ts-ignore — параметры используются только в наследниках
-  protected onInputChange(field: keyof T, value: string) {
-    // Пустая реализация в базовом классе — переопределяется в дочерних
-  }
+  protected onInputChange(field: keyof T, value: string) {}
 
-  protected handleSubmit() {
-    // Переопределяется в дочерних классах
-  }
+  protected handleSubmit() {}
 
   set valid(value: boolean) {
     this._submitButton.disabled = !value;
@@ -46,10 +43,12 @@ export abstract class Form<T> extends Component<IFormState> {
     this._errors.textContent = value.join('; ');
   }
 
-  render(state: IFormState & Partial<T>): HTMLElement {
-    super.render(state);
-    this.valid = state.valid;
-    this.errors = state.errors || [];
+  render(state?: IFormState & Partial<T>): HTMLElement {
+    if (state) {
+      super.render(state);
+      this.valid = state.valid ?? false;
+      this.errors = state.errors ?? [];
+    }
     return this.container;
   }
 }

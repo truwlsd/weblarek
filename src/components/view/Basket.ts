@@ -1,6 +1,5 @@
-
 import { Component } from '../base/Component';
-import { events } from '../common/events';
+import { events } from '../../main';
 
 interface IBasketData {
   items: HTMLElement[];
@@ -11,13 +10,20 @@ export class Basket extends Component<IBasketData> {
   protected _list: HTMLElement;
   protected _total: HTMLElement;
   protected _button: HTMLButtonElement;
+  protected _emptyMessage: HTMLElement;
 
   constructor(container: HTMLElement) {
     super(container);
 
     this._list = container.querySelector('.basket__list')!;
-    this._button = container.querySelector('.basket__button')!;
     this._total = container.querySelector('.basket__price')!;
+    this._button = container.querySelector('.basket__button')!;
+
+    this._emptyMessage = (container.querySelector('.basket__empty') as HTMLElement) || document.createElement('p');
+    if (!this._emptyMessage.parentElement) {
+      this._emptyMessage.textContent = 'Корзина пуста';
+      this._list.appendChild(this._emptyMessage);
+    }
 
     this._button.addEventListener('click', () => {
       events.emit('basket:order-open');
@@ -25,12 +31,11 @@ export class Basket extends Component<IBasketData> {
   }
 
   set items(items: HTMLElement[]) {
-    if (items.length) {
-      this._list.replaceChildren(...items);
-    } else {
-      this._list.replaceChildren(
-        this.createEmptyMessage()
-      );
+    this._list.replaceChildren(...items);
+
+    const emptyMessage = this._emptyMessage as HTMLElement;
+    if (emptyMessage) {
+      emptyMessage.style.display = items.length === 0 ? 'block' : 'none';
     }
   }
 
@@ -40,12 +45,5 @@ export class Basket extends Component<IBasketData> {
 
   set valid(value: boolean) {
     this._button.disabled = !value;
-  }
-
-  private createEmptyMessage(): HTMLElement {
-    const message = document.createElement('p');
-    message.textContent = 'Корзина пуста';
-    message.classList.add('basket__empty');
-    return message;
   }
 }

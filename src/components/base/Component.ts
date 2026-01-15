@@ -1,5 +1,3 @@
-// src/components/base/Component.ts
-
 /**
  * Базовый компонент
  */
@@ -18,11 +16,6 @@ export abstract class Component<T> {
                 element.alt = alt;
             }
         }
-    }
-
-    // Геттер для доступа к корневому элементу извне (в презентере)
-    get element(): HTMLElement {
-        return this.container;
     }
 
     // Вернуть корневой DOM-элемент

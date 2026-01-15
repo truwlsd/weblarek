@@ -1,6 +1,5 @@
-
 import { Card } from './Card';
-import { events } from '../common/events';
+import { events } from '../../main';
 
 export class CardPreview extends Card {
   protected _description: HTMLElement;
@@ -13,7 +12,7 @@ export class CardPreview extends Card {
     this._button = container.querySelector('.card__button')!;
 
     this._button.addEventListener('click', () => {
-      events.emit('card:toggle-basket', { id: container.dataset.id! });
+      events.emit('card:toggle-basket'); // без id
     });
   }
 

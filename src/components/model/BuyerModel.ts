@@ -1,6 +1,6 @@
 
 import { IBuyer } from '../../types';
-import { events } from '../common/events';
+import { events } from '../../main';
 
 type ValidationErrors = Partial<Record<keyof IBuyer, string>>;
 

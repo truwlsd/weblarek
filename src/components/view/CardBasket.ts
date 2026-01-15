@@ -1,6 +1,6 @@
 
 import { Card } from './Card';
-import { events } from '../common/events';
+import { events } from "../../main";
 
 export class CardBasket extends Card {
   protected _index: HTMLElement;

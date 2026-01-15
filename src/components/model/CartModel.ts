@@ -1,6 +1,6 @@
 
 import { IProduct } from '../../types';
-import { events } from '../common/events';
+import { events } from "../../main";
 
 export class CartModel {
   private items: IProduct[] = [];

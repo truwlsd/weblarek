@@ -1,7 +1,7 @@
 // src/components/view/Success.ts
 
 import { Component } from '../base/Component';
-import { events } from '../common/events';
+import { events } from "../../main";
 
 interface ISuccessData {
   total: number;

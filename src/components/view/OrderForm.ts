@@ -1,34 +1,57 @@
-
 import { Form } from './Form';
-import { events } from '../common/events';
+import { events } from '../../main';
 
 export class OrderForm extends Form<{}> {
-  protected _cardButton: HTMLButtonElement;
-  protected _cashButton: HTMLButtonElement;
+  private _cardButton: HTMLButtonElement;
+  private _cashButton: HTMLButtonElement;
+  private _addressInput: HTMLInputElement;
+
+  private _payment: 'card' | 'cash' | null = null;
+  private _address: string = '';
 
   constructor(container: HTMLFormElement) {
     super(container);
 
     this._cardButton = container.querySelector('button[name="card"]')!;
     this._cashButton = container.querySelector('button[name="cash"]')!;
+    this._addressInput = container.querySelector('input[name="address"]')!;
 
-    this._cardButton.addEventListener('click', () => this.setPayment('card'));
-    this._cashButton.addEventListener('click', () => this.setPayment('cash'));
+    // Выбор оплаты
+    this._cardButton.addEventListener('click', () => {
+      this._payment = 'card';
+      this._cardButton.classList.add('button_active');
+      this._cashButton.classList.remove('button_active');
+      this.validateForm();
+    });
+
+    this._cashButton.addEventListener('click', () => {
+      this._payment = 'cash';
+      this._cashButton.classList.add('button_active');
+      this._cardButton.classList.remove('button_active');
+      this.validateForm();
+    });
+
+    // Адрес
+    this._addressInput.addEventListener('input', () => {
+      this._address = this._addressInput.value.trim();
+      this.validateForm();
+    });
+
+    this.validateForm();
   }
 
-  private setPayment(payment: 'card' | 'cash') {
-    this._cardButton.classList.toggle('button_alt-active', payment === 'card');
-    this._cashButton.classList.toggle('button_alt-active', payment === 'cash');
-    events.emit('order.payment:changed', { payment });
-  }
+  private validateForm() {
+    const paymentError = this._payment ? '' : 'Не выбран способ оплаты';
+    const addressError = this._address.length > 0 ? '' : 'Не указан адрес доставки';
 
-  protected onInputChange(field: string, value: string) {
-    if (field === 'address') {
-      events.emit('order.address:changed', { address: value });
-    }
+    this.errors = [paymentError, addressError].filter(Boolean);
+
+    this.valid = !paymentError && !addressError;
   }
 
   protected handleSubmit() {
-    events.emit('order:next');
+    if (this.valid) {
+      events.emit('order:next');
+    }
   }
 }
