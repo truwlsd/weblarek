@@ -30,7 +30,7 @@ export abstract class Form<T> extends Component<IFormState> {
   }
 
   set valid(value: boolean) {
-    this.submitButton.disabled = value
+    this.submitButton.disabled = !value
   }
 
 
