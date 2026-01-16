@@ -10,35 +10,25 @@ export class Buyer {
   constructor(private events: IEvents) {}
 
   setPayment(payment: string) {
+    console.log('BuyerModel: Setting payment to:', payment);
     this.payment = payment;
-    this.events.emit('orderForm:validate', {
-      data: this.getData(),
-      validate: this.validate()
-    });
+    this.events.emit('buyer:changed');
   }
 
   setEmail(email: string) {
     this.email = email;
-    this.events.emit('contactsForm:validate', {
-      data: this.getData(),
-      validate: this.validate()
-    });
+    this.events.emit('buyer:changed');
   }
 
   setPhone(phone: string) {
     this.phone = phone;
-    this.events.emit('contactsForm:validate', {
-      data: this.getData(),
-      validate: this.validate()
-    });
+    this.events.emit('buyer:changed');
   }
 
   setAddress(address: string) {
+    console.log('BuyerModel: Setting address to:', address);
     this.address = address;
-    this.events.emit('orderForm:validate', {
-      data: this.getData(),
-      validate: this.validate()
-    });
+    this.events.emit('buyer:changed');
   }
 
   getData(): IBuyer {
@@ -55,28 +45,30 @@ export class Buyer {
     this.email = '';
     this.phone = '';
     this.address = '';
-    this.events.emit('buyer:changed', this.getData());
-    this.events.emit('buyer:cleared');
+    this.events.emit('buyer:changed');
   }
 
   validate(): Validation {
     const errors: Validation['errors'] = {};
 
-    if (!this.payment || this.payment.trim() === '') {
-      errors.payment = 'Выберите способ оплаты!';
+    if (!this.payment) {
+      errors.payment = 'Выберите способ оплаты';
     }
 
-    if (!this.email || this.email.trim() === '') {
-      errors.email = 'Напишите свою почту!';
+    if (!this.address) {
+      errors.address = 'Укажите адрес доставки';
     }
 
-    if (!this.address || this.address.trim() === '') {
-      errors.address = 'Поле адреса обязательно к заполнению!';
+    if (!this.email) {
+      errors.email = 'Укажите email';
     }
 
-    if (!this.phone || this.phone.trim() === '') {
-      errors.phone = 'Заполните поле с телефоном!';
+    if (!this.phone) {
+      errors.phone = 'Укажите телефон';
     }
+    
+    // Лог: Что модель думает о валидности
+    // console.log('BuyerModel: Validation result:', errors);
 
     return {
       isValid: Object.keys(errors).length === 0,

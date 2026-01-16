@@ -13,13 +13,12 @@ import {CardPreview} from "./components/Views/CardPreview.ts";
 import {Header} from "./components/Views/Header.ts";
 import {BasketView} from "./components/Views/BasketView.ts";
 import {CardBasket} from "./components/Views/CardBasket.ts";
-import {IProduct, IOrderRequest, IBuyer} from "./types";
+import {IProduct, IOrderRequest} from "./types";
 import {Buyer} from "./components/Models/Buyer.ts";
 import { OrderForm } from "./components/Views/OrderForm.ts";
 import { ContactsForm } from "./components/Views/ContactsForm.ts";
 import { Success } from "./components/Views/Success.ts";
 
-// templates & blocks
 const cardCatalogTemplate = ensureElement<HTMLTemplateElement>('#card-catalog')
 const cardPreviewTemplate = ensureElement<HTMLTemplateElement>('#card-preview')
 const basketTemplate = ensureElement<HTMLTemplateElement>('#basket')
@@ -29,17 +28,16 @@ const orderTemplate = ensureElement<HTMLTemplateElement>('#order');
 const contactsTemplate = ensureElement<HTMLTemplateElement>('#contacts');
 const successTemplate = ensureElement<HTMLTemplateElement>('#success');
 
-// api & models - создаются один раз
 const api = new Api(API_URL)
 const larekAPI = new LarekApi(api)
 const events = new EventEmitter();
 
-// views - создаются один раз
 const productCatalog = new ProductsCatalog(events)
 const basketModel = new Basket(events)
 const gallery = new Gallery(ensureElement<HTMLElement>('.gallery'))
 const header = new Header(events, ensureElement<HTMLElement>('.header'))
 const modal = new Modal(modalContainer, events)
+
 const basketView = new BasketView(cloneTemplate(basketTemplate), {
   onClick: () => {
     events.emit('basket:orderNew')
@@ -47,12 +45,16 @@ const basketView = new BasketView(cloneTemplate(basketTemplate), {
 })
 const buyerModel = new Buyer(events)
 
-// Создаем экземпляры форм заранее
 const orderForm = new OrderForm(events, cloneTemplate(orderTemplate), 'order:submit');
 const contactsForm = new ContactsForm(events, cloneTemplate(contactsTemplate), 'contacts:submit');
 const successView = new Success(cloneTemplate(successTemplate), events);
 
-// Получение данных о товарах с сервера
+const cardPreview = new CardPreview(cloneTemplate(cardPreviewTemplate), {
+  onClick: () => {
+    events.emit('preview:action');
+  }
+});
+
 async function getProductsServer() {
   try {
     const products = await larekAPI.getProductList();
@@ -62,7 +64,6 @@ async function getProductsServer() {
   }
 }
 
-// События для каталога товаров
 events.on('products:changed', () => {
   const products = productCatalog.getProducts();
 
@@ -84,72 +85,59 @@ events.on('products:changed', () => {
   gallery.render({catalog: cards})
 })
 
-events.on('card:selected', product => {
+events.on('card:selected', (product: IProduct) => {
   productCatalog.setSelectedProduct(product)
 })
 
 events.on('product:selected', () => {
   const selectedProduct = productCatalog.getSelectedProduct();
-  const isInBasket = basketModel.productInCart(selectedProduct?.id)
+  if (!selectedProduct) return;
 
-  const { buttonText, action } = getButtonConfig(selectedProduct, isInBasket);
+  const isInBasket = basketModel.productInCart(selectedProduct.id);
+  const { buttonText } = getButtonConfig(selectedProduct, isInBasket);
 
-  const card = new CardPreview(cloneTemplate(cardPreviewTemplate), {
-    onClick: () => {
-      modal.close();
-      handleProductAction(action, selectedProduct, events);
-    }
-  })
-
-  const cardRender = card.render({
-    title: selectedProduct?.title,
-    image: CDN_URL + selectedProduct?.image,
-    price: selectedProduct?.price,
-    category: selectedProduct?.category,
-    description: selectedProduct?.description,
+  const cardRender = cardPreview.render({
+    title: selectedProduct.title,
+    image: CDN_URL + selectedProduct.image,
+    price: selectedProduct.price,
+    category: selectedProduct.category,
+    description: selectedProduct.description,
     buttonText: buttonText
-  })
+  });
 
   modal.render({content: cardRender})
   modal.open()
-})
+});
 
-// Вспомогательные функции для товаров
-function getButtonConfig(product: IProduct | null, isInBasket: boolean): { buttonText: string; action: 'add' | 'remove' | 'none' } {
-  if (!product) return { buttonText: 'Недоступно', action: 'none' };
+events.on('preview:action', () => {
+    const selectedProduct = productCatalog.getSelectedProduct();
+    if (!selectedProduct) return;
+    if (!selectedProduct.price) return;
 
+    if (basketModel.productInCart(selectedProduct.id)) {
+        basketModel.removeProduct(selectedProduct);
+    } else {
+        basketModel.setProductCart(selectedProduct);
+    }
+    modal.close();
+});
+
+function getButtonConfig(product: IProduct, isInBasket: boolean) {
   if (isInBasket) {
-    return { buttonText: 'Удалить из корзины', action: 'remove' };
+    return { buttonText: 'Удалить из корзины' };
   } else if (product.price) {
-    return { buttonText: 'В корзину', action: 'add' };
+    return { buttonText: 'В корзину' };
   } else {
-    return { buttonText: 'Недоступно', action: 'none' };
+    return { buttonText: 'Недоступно' };
   }
 }
-
-function handleProductAction(action: 'add' | 'remove' | 'none', product: IProduct | null, events: EventEmitter): void {
-  switch (action) {
-    case 'add':
-      events.emit('product:toBasket', product);
-      break;
-    case 'remove':
-      events.emit('basket:deleteProduct', product);
-      break;
-    case 'none':
-      break;
-  }
-}
-
-// События для корзины
-events.on('product:toBasket', product => {
-  basketModel.setProductCart(product)
-})
 
 events.on('basket:deleteProduct', (product: IProduct) => {
   basketModel.removeProduct(product)
 })
 
 events.on('basket:open', () => {
+  events.emit('basket:changed');
   modal.render({ content: basketView.render()});
   modal.open();
 })
@@ -181,26 +169,31 @@ events.on('basket:changed', () => {
 })
 
 events.on('basket:orderNew', () => {
-  const basketList = basketModel.getProductsCart()
-  if(basketList && basketList.length > 0) {
-    modal.render({content: orderForm.render()})
-  }
-  // Ничего не отчищаю, так как пользователь может случайно закрыть форму заполнения.
-  events.emit('orderForm:validate', {
-    data: buyerModel.getData(),
-    validate: buyerModel.validate()
-  })
+  const data = buyerModel.getData();
+  
+  orderForm.payment = data.payment;
+  orderForm.address = data.address;
+
+  modal.render({
+      content: orderForm.render({
+          valid: false,
+          errors: []
+      })
+  });
+  
+  const validation = buyerModel.validate();
+  orderForm.valid = !validation.errors.address && !validation.errors.payment;
 })
 
-events.on('orderForm:payments', data => {
-  buyerModel.setPayment(data.paymentType)
+events.on('order:payment', (data: { value: string }) => {
+  buyerModel.setPayment(data.value)
 })
 
-events.on('order:input', data => {
+events.on('order:input', (data: { value: string }) => {
   buyerModel.setAddress(data.value)
 })
 
-events.on('contacts:input', data => {
+events.on('contacts:input', (data: { field: string, value: string }) => {
   if(data.field === 'email') {
     buyerModel.setEmail(data.value)
   } else {
@@ -208,50 +201,50 @@ events.on('contacts:input', data => {
   }
 })
 
-function validator(fields: string[], data) {
-  const stringErrors: string[] = []
-  let isValid: boolean = false
-  fields.forEach(field => {
-    if(field in data.validate.errors) {
-      stringErrors.push(data.validate.errors[field])
-    }
-  })
+events.on('buyer:changed', () => {
+    const validation = buyerModel.validate();
+    const data = buyerModel.getData();
 
-  if(stringErrors.length === 0) {
-    isValid = true
-  }
+    console.group(' DEBUG: buyer:changed');
+    
+    console.log('Данные из модели', data);
+    
+    console.log('ERRORS (Ошибки валидации', validation.errors);
+    
+    const addressOk = !validation.errors.address;
+    const paymentOk = !validation.errors.payment;
+    const finalValid = addressOk && paymentOk;
+    
+    console.log(` Адрес ${addressOk}`);
+    console.log(`Оплата  ${paymentOk}`);
+    console.log(`отправляем в форму ${finalValid}`);
+    
+    console.groupEnd();
 
-  return {
-    stringErrors,
-    isValid: !isValid
-  }
+    orderForm.valid = finalValid;
+    
+    orderForm.errors = [validation.errors.address, validation.errors.payment].filter(i => !!i) as string[];
+    orderForm.payment = data.payment;
 
-}
-
-events.on('orderForm:validate', data => {
-  const validateOrderForm = validator(['payment', 'address'], data)
-  orderForm.payment = data.data['payment'];
-  orderForm.valid = validateOrderForm.isValid
-  orderForm.errors = validateOrderForm.stringErrors
-})
+    contactsForm.valid = !validation.errors.email && !validation.errors.phone;
+    contactsForm.errors = [validation.errors.email, validation.errors.phone].filter(i => !!i) as string[];
+});
 
 events.on('order:submit', () => {
-  modal.render({content: contactsForm.render()})
-  events.emit('contactsForm:validate', {
-    data: buyerModel.getData(),
-    validate: buyerModel.validate()
-  })
-})
-
-events.on('contactsForm:validate', data => {
-  const validateContactForm = validator(['email', 'phone'], data)
-  contactsForm.valid = validateContactForm.isValid;
-  contactsForm.errors = validateContactForm.stringErrors
+  const data = buyerModel.getData();
+  
+  contactsForm.email = data.email;
+  contactsForm.phone = data.phone;
+  
+  modal.render({content: contactsForm.render()});
+  
+  const validation = buyerModel.validate();
+  contactsForm.valid = !validation.errors.email && !validation.errors.phone;
 })
 
 events.on('contacts:submit', async () => {
   const validation = buyerModel.validate()
-  // Проверяем валидацию
+  
   if (validation.isValid) {
     try {
       const orderRequest: IOrderRequest = {
@@ -262,27 +255,17 @@ events.on('contacts:submit', async () => {
       const result = await larekAPI.submitOrder(orderRequest);
       modal.render({content: successView.render({total: result.total})})
 
-      basketModel.clearingCart()
-      buyerModel.clear()
-      orderForm.clear()
-      contactsForm.clear()
-    } catch (e) {
-      console.error('Ошибка при оформлении заказа:', error);
+      basketModel.clearingCart();
+      buyerModel.clear(); 
+      
+    } catch (error) {
+      console.error(error);
     }
-  } else {
-    const errorMessages = Object.values(validation.errors);
-    alert(`Ошибки заполнения формы:\n${errorMessages.join('\n')}`);
-  }
-
+  } 
 })
 
 events.on('success:close', () => {
   modal.close();
 });
-
-// Инициализация корзины
-setTimeout(() => {
-  events.emit('basket:changed');
-}, 0);
 
 getProductsServer();

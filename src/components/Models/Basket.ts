@@ -6,14 +6,6 @@ export class Basket {
 
   constructor(protected events: IEvents) {
     this.products = [];
-    // Инициализируем корзину при создании
-    setTimeout(() => {
-      this.events.emit('basket:changed');
-    }, 0);
-  }
-
-  init() {
-    this.events.emit('basket:changed');
   }
 
   getProductsCart(): IProduct[] {
@@ -21,8 +13,10 @@ export class Basket {
   }
 
   setProductCart(product: IProduct) {
-    this.products.push(product)
-    this.events.emit('basket:changed');
+    if (!this.productInCart(product.id)) {
+        this.products.push(product)
+        this.events.emit('basket:changed');
+    }
   }
 
   clearingCart() {
@@ -34,8 +28,8 @@ export class Basket {
     const index = this.products.findIndex(item => item.id === product.id)
     if(index !== -1) {
       this.products.splice(index, 1);
+      this.events.emit('basket:changed');
     }
-    this.events.emit('basket:changed');
   }
 
   basketCost(): number {
